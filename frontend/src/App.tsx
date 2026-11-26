@@ -37,8 +37,8 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<Layout onSearch={setSearchQuery} />}>
-            <Route index element={<Dashboard searchQuery={searchQuery} />} />
             <Route element={<RequireAuth />}>
+              <Route index element={<Dashboard searchQuery={searchQuery} />} />
               <Route path="tools/research" element={<Research />} />
               <Route path="tools/thumbnails" element={<Thumbnails />} />
               <Route path="tools/scripts" element={<Scripts />} />
