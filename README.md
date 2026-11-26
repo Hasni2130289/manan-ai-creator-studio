@@ -18,11 +18,11 @@ voice and image tools, and a link out to the existing Manan Clipping Tool.
 | Tool | What it does | Status |
 | ---- | ------------ | ------ |
 | **Manan Clipping Tool** | The existing clipping app (separate repo, separate deployment). The Studio links out to it — it is **not** embedded or modified here. | Live at https://manan-clipping-tool-production.up.railway.app/ |
-| **Manan Viral Research** | Real YouTube search (titles, thumbnails, channel, views, dates) via the YouTube Data API v3; save to a research board; export CSV/JSON; title + hook ideas. | Setup required — needs `YOUTUBE_API_KEY` for search; ideas fall back to labelled templates without `OPENAI_API_KEY`. |
-| **Manan AI Thumbnail Maker** | Canvas workspace: topic/title input, style presets (gaming, storytelling, documentary, education), image upload, editable text/size/position/colours, preview, PNG/JPEG export, save to My Projects. | Live (prompt mode + canvas editor). AI image generation needs `IMAGE_API_KEY`; background removal needs `BGREMOVE_API_KEY`. |
-| **Manan Video-to-Script AI** | Summary, key points, script, hooks and CTAs from a pasted transcript or uploaded file, in English, Urdu or Roman Urdu. | Live (template extraction). Accepts a YouTube URL only when a transcript can actually be fetched — otherwise it returns an honest `transcript_unavailable` error. AI output needs `OPENAI_API_KEY`. |
-| **Manan Faceless Video Maker** | 9-step workflow (topic/script → format → language/voice → narration → visuals → captions → storyboard → render → download), vertical + horizontal, async jobs with progress. | Needs setup — rendering requires a TTS key (`ELEVENLABS_API_KEY` or `OPENAI_API_KEY`); FFmpeg is installed in the Docker image. Without a TTS key the job reports `needs_setup` — no fake video is ever shown. |
-| **Manan Multi-Platform Post Maker** | YouTube/Shorts/Facebook/Instagram/TikTok captions, hooks, hashtags, polls, content calendar; topic + platform + language + tone; multiple variations; save/export. | Live (template generator). AI output needs `OPENAI_API_KEY`. No external publishing — publishing needs an authorized integration. |
+| **Manan Viral Research** | Real YouTube search (titles, thumbnails, channel, views, dates) via the YouTube Data API v3; save to a research board; export CSV/JSON; title + hook ideas. | Setup required — needs `YOUTUBE_API_KEY` for search; ideas use the free built-in AI provider (templates only if that fails). |
+| **Manan AI Thumbnail Maker** | Canvas workspace: topic/title input, style presets (gaming, storytelling, documentary, education), image upload, editable text/size/position/colours, preview, PNG/JPEG export, save to My Projects. | Live. AI image generation works with no key (free built-in provider); background removal needs `BGREMOVE_API_KEY`. |
+| **Manan Video-to-Script AI** | Summary, key points, script, hooks and CTAs from a pasted transcript or uploaded file, in English, Urdu or Roman Urdu. | Live. Accepts a YouTube URL only when a transcript can actually be fetched — otherwise it returns an honest `transcript_unavailable` error. AI output works with no key (free built-in provider). |
+| **Manan Faceless Video Maker** | 9-step workflow (topic/script → format → language/voice → narration → visuals → captions → storyboard → render → download), vertical + horizontal, async jobs with progress. | Live. Rendering works with no key using the free built-in narration voice; FFmpeg is installed in the Docker image. Set `ELEVENLABS_API_KEY` or `OPENAI_API_KEY` for premium narration. No fake video is ever shown. |
+| **Manan Multi-Platform Post Maker** | YouTube/Shorts/Facebook/Instagram/TikTok captions, hooks, hashtags, polls, content calendar; topic + platform + language + tone; multiple variations; save/export. | Live. AI output works with no key (free built-in provider). No external publishing — publishing needs an authorized integration. |
 
 Any tool whose provider key is missing runs in
 template / setup-required mode (see [What still needs keys](#what-still-needs-keys)).
@@ -89,9 +89,9 @@ the browser or shipped in the frontend build.
 | `ADMIN_EMAIL` | Email of the first admin account | Yes (first setup) |
 | `ADMIN_SETUP_TOKEN` | Token for the setup-admin endpoint | Yes (first setup) |
 | `YOUTUBE_API_KEY` | YouTube Data API v3 — Viral Research | Optional* |
-| `OPENAI_API_KEY` | AI text / image / TTS provider | Optional* |
-| `IMAGE_API_KEY` | Image generation; defaults to `OPENAI_API_KEY` if unset | Optional |
-| `ELEVENLABS_API_KEY` | TTS narration (ElevenLabs) | Optional* |
+| `OPENAI_API_KEY` | AI text provider (optional upgrade over the free built-in provider) | Optional |
+| `IMAGE_API_KEY` | Image generation (optional upgrade over the free built-in provider) | Optional |
+| `ELEVENLABS_API_KEY` | TTS narration (optional upgrade over the free built-in voice) | Optional |
 | `STT_API_KEY` | Speech-to-text provider | Optional* |
 | `BGREMOVE_API_KEY` | Background removal provider | Optional* |
 | `CLIPPING_TOOL_URL` | URL of the external Clipping Tool (default https://manan-clipping-tool-production.up.railway.app/) | Optional |
@@ -182,9 +182,9 @@ setup-required mode — the app still starts and the rest of the Studio works.
 | Provider | Env var | Without it |
 | -------- | ------- | ---------- |
 | YouTube Data API v3 | `YOUTUBE_API_KEY` | Viral Research cannot fetch YouTube data |
-| OpenAI | `OPENAI_API_KEY` | AI text / image / TTS features unavailable |
-| Image generation | `IMAGE_API_KEY` (or `OPENAI_API_KEY`) | Image generation unavailable |
-| ElevenLabs | `ELEVENLABS_API_KEY` | TTS narration unavailable |
+| OpenAI | `OPENAI_API_KEY` | Free built-in text provider is used instead |
+| Image generation | `IMAGE_API_KEY` (or `OPENAI_API_KEY`) | Free built-in image provider is used instead |
+| ElevenLabs | `ELEVENLABS_API_KEY` | Free built-in narration voice is used instead |
 | Speech-to-text provider | `STT_API_KEY` | Transcription unavailable |
 | Background removal provider | `BGREMOVE_API_KEY` | Background removal unavailable |
 

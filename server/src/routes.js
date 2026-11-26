@@ -11,9 +11,9 @@ import {
   templateIdeas, templateScript, templatePosts, thumbnailPrompt, THUMBNAIL_STYLES,
 } from './generators.js';
 import {
-  openaiChat, parseIdeasJson, youtubeSearch, openaiImage, removeBg, fetchYouTubeTranscript,
+  aiChat, parseIdeasJson, youtubeSearch, generateImage, removeBg, fetchYouTubeTranscript,
 } from './providersApi.js';
-import { ffmpegAvailable, ttsConfigured, renderVideo, renderOutputPath } from './videoRender.js';
+import { ffmpegAvailable, renderVideo, renderOutputPath } from './videoRender.js';
 
 const PROJECT_TYPES = ['research', 'script', 'thumbnail', 'video', 'post', 'other'];
 const PLATFORMS = ['youtube', 'shorts', 'facebook', 'instagram', 'tiktok'];
@@ -228,18 +228,16 @@ export function createApiRouter(store) {
     try {
       const { value: topic, error: tErr } = reqString(req.body?.topic, { max: 500, field: 'topic' });
       if (tErr) return badRequest(res, tErr);
-      if (process.env.OPENAI_API_KEY) {
-        try {
-          const text = await openaiChat([
-            { role: 'system', content: 'You generate YouTube video title and hook ideas. Reply with JSON only: {"ideas":[{"title":"...","hook":"..."}]} — 5 ideas.' },
-            { role: 'user', content: `Topic: ${topic}` },
-          ]);
-          const ideas = parseIdeasJson(text, topic);
-          if (ideas.length) return res.json({ source: 'ai', ideas });
-        } catch (err) {
-          recordError(err, { route: 'POST /api/research/ideas' });
-          // Fall through to honest template fallback rather than failing.
-        }
+      try {
+        const text = await aiChat([
+          { role: 'system', content: 'You generate YouTube video title and hook ideas. Reply with JSON only: {"ideas":[{"title":"...","hook":"..."}]} — 5 ideas.' },
+          { role: 'user', content: `Topic: ${topic}` },
+        ]);
+        const ideas = parseIdeasJson(text, topic);
+        if (ideas.length) return res.json({ source: 'ai', ideas });
+      } catch (err) {
+        recordError(err, { route: 'POST /api/research/ideas' });
+        // Fall through to honest template fallback rather than failing.
       }
       res.json({ source: 'template', ideas: templateIdeas(topic) });
     } catch (err) { next(err); }
@@ -280,26 +278,24 @@ export function createApiRouter(store) {
         }
       }
 
-      if (process.env.OPENAI_API_KEY) {
-        try {
-          const text = await openaiChat([
-            { role: 'system', content: `You write video scripts. Reply with JSON only: {"summary":"...","keyPoints":["..."],"script":"...","hooks":["..."],"ctas":["..."]}. Language: ${language}. Length: ${length}.` },
-            { role: 'user', content: transcript.slice(0, 12000) },
-          ]);
-          const parsed = JSON.parse(text);
-          if (parsed && typeof parsed.script === 'string') {
-            return res.json({
-              source: 'ai',
-              summary: parsed.summary || '',
-              keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
-              script: parsed.script,
-              hooks: Array.isArray(parsed.hooks) ? parsed.hooks : [],
-              ctas: Array.isArray(parsed.ctas) ? parsed.ctas : [],
-            });
-          }
-        } catch (err) {
-          recordError(err, { route: 'POST /api/scripts/generate' });
+      try {
+        const text = await aiChat([
+          { role: 'system', content: `You write video scripts. Reply with JSON only: {"summary":"...","keyPoints":["..."],"script":"...","hooks":["..."],"ctas":["..."]}. Language: ${language}. Length: ${length}.` },
+          { role: 'user', content: transcript.slice(0, 12000) },
+        ]);
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed.script === 'string') {
+          return res.json({
+            source: 'ai',
+            summary: parsed.summary || '',
+            keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
+            script: parsed.script,
+            hooks: Array.isArray(parsed.hooks) ? parsed.hooks : [],
+            ctas: Array.isArray(parsed.ctas) ? parsed.ctas : [],
+          });
         }
+      } catch (err) {
+        recordError(err, { route: 'POST /api/scripts/generate' });
       }
       res.json(templateScript(transcript, language, length));
     } catch (err) { next(err); }
@@ -319,20 +315,18 @@ export function createApiRouter(store) {
       const lang = language || 'en';
       const toneVal = tone || 'casual';
 
-      if (process.env.OPENAI_API_KEY) {
-        try {
-          const text = await openaiChat([
-            { role: 'system', content: `You write social media posts. Reply with JSON only: {"variations":[{"platform":"...","title":"...","caption":"...","hashtags":["..."],"hooks":["..."]}]}. 2-3 variations per platform.` },
-            { role: 'user', content: `Topic: ${topic}. Platforms: ${platforms.join(', ')}. Language: ${lang}. Tone: ${toneVal}.` },
-          ]);
-          const parsed = JSON.parse(text);
-          if (parsed && Array.isArray(parsed.variations) && parsed.variations.length) {
-            const variations = parsed.variations.filter((v) => platforms.includes(v.platform) && typeof v.caption === 'string');
-            if (variations.length) return res.json({ source: 'ai', variations });
-          }
-        } catch (err) {
-          recordError(err, { route: 'POST /api/posts/generate' });
+      try {
+        const text = await aiChat([
+          { role: 'system', content: `You write social media posts. Reply with JSON only: {"variations":[{"platform":"...","title":"...","caption":"...","hashtags":["..."],"hooks":["..."]}]}. 2-3 variations per platform.` },
+          { role: 'user', content: `Topic: ${topic}. Platforms: ${platforms.join(', ')}. Language: ${lang}. Tone: ${toneVal}.` },
+        ]);
+        const parsed = JSON.parse(text);
+        if (parsed && Array.isArray(parsed.variations) && parsed.variations.length) {
+          const variations = parsed.variations.filter((v) => platforms.includes(v.platform) && typeof v.caption === 'string');
+          if (variations.length) return res.json({ source: 'ai', variations });
         }
+      } catch (err) {
+        recordError(err, { route: 'POST /api/posts/generate' });
       }
       res.json(templatePosts(topic, platforms, lang, toneVal));
     } catch (err) { next(err); }
@@ -356,16 +350,12 @@ export function createApiRouter(store) {
       if (pErr) return badRequest(res, pErr);
       const { value: style, error: sErr } = reqEnum(req.body?.style, Object.keys(THUMBNAIL_STYLES), { required: false, field: 'style' });
       if (sErr) return badRequest(res, sErr);
-      if (!process.env.IMAGE_API_KEY) {
-        return setupRequired(res, 'image', 'IMAGE_API_KEY',
-          'AI thumbnail generation needs an image API key. Set IMAGE_API_KEY to enable it.');
-      }
       try {
-        const result = await openaiImage(prompt);
+        const result = await generateImage(prompt);
         res.json({ source: 'ai', style: style || undefined, ...result });
       } catch (err) {
         recordError(err, { route: 'POST /api/thumbnails/generate' });
-        res.status(502).json({ error: 'provider_error', message: 'Image generation failed. Check the image API key and try again.' });
+        res.status(502).json({ error: 'provider_error', message: 'Image generation failed. Please try again.' });
       }
     } catch (err) { next(err); }
   });
@@ -417,7 +407,6 @@ export function createApiRouter(store) {
 
       const now = new Date().toISOString();
       const missing = [];
-      if (!ttsConfigured()) missing.push('TTS_API_KEY');
       const hasFfmpeg = await ffmpegAvailable();
       if (!hasFfmpeg) missing.push('ffmpeg');
       const job = {
@@ -432,7 +421,7 @@ export function createApiRouter(store) {
         progress: 0,
         missing: missing.length ? missing : null,
         message: missing.length
-          ? `Cannot render yet — missing: ${missing.join(', ')}. ${missing.includes('TTS_API_KEY') ? 'Set ELEVENLABS_API_KEY or OPENAI_API_KEY for narration.' : ''}${missing.includes('ffmpeg') ? ' Install ffmpeg on the server.' : ''}`
+          ? `Cannot render yet — missing: ${missing.join(', ')}. Install ffmpeg on the server.`
           : null,
         created_at: now,
         updated_at: now,

@@ -27,12 +27,15 @@ export async function checkClippingTool() {
   return status;
 }
 
+// Text, image and TTS work with no key via free built-in providers
+// (Pollinations text/image, Google Translate TTS). A paid key, when set,
+// upgrades that capability. YouTube search still needs its own key.
 export function providerConfigured() {
   return {
     youtube: { configured: !!process.env.YOUTUBE_API_KEY },
-    openai: { configured: !!process.env.OPENAI_API_KEY },
-    image: { configured: !!process.env.IMAGE_API_KEY },
-    tts: { configured: !!(process.env.ELEVENLABS_API_KEY || process.env.OPENAI_API_KEY) },
+    openai: { configured: true },
+    image: { configured: true },
+    tts: { configured: true },
     stt: { configured: !!process.env.OPENAI_API_KEY },
     bgremove: { configured: !!process.env.BGREMOVE_API_KEY },
   };
@@ -48,24 +51,24 @@ export const PROVIDER_DEFS = [
   },
   {
     id: 'openai',
-    name: 'OpenAI',
+    name: 'AI text (free built-in, OpenAI optional)',
     envVar: 'OPENAI_API_KEY',
     instructions:
-      'Create an API key at platform.openai.com > API keys and set it as OPENAI_API_KEY. Used for AI ideas, scripts, posts and (optionally) narration.',
+      'Works with no key using the free built-in text provider. Set OPENAI_API_KEY to use OpenAI instead (better quality). Used for AI ideas, scripts and posts.',
   },
   {
     id: 'image',
-    name: 'Image generation (OpenAI Images)',
+    name: 'Image generation (free built-in, OpenAI optional)',
     envVar: 'IMAGE_API_KEY',
     instructions:
-      'Create an API key at platform.openai.com > API keys and set it as IMAGE_API_KEY. Used for AI thumbnail generation.',
+      'Works with no key using the free built-in image provider. Set IMAGE_API_KEY to use OpenAI Images instead. Used for AI thumbnail generation.',
   },
   {
     id: 'tts',
-    name: 'Text-to-speech (ElevenLabs or OpenAI)',
+    name: 'Text-to-speech (free built-in, ElevenLabs/OpenAI optional)',
     envVar: 'ELEVENLABS_API_KEY',
     instructions:
-      'Get a key from ElevenLabs (elevenlabs.io > Profile > API Keys) and set it as ELEVENLABS_API_KEY, or set OPENAI_API_KEY which also provides TTS. Required for faceless-video narration.',
+      'Works with no key using the free built-in narration voice. Set ELEVENLABS_API_KEY for premium voices, or OPENAI_API_KEY which also provides TTS. Used for faceless-video narration.',
   },
   {
     id: 'stt',

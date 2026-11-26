@@ -179,14 +179,14 @@ test('research search returns setupRequired when no YouTube key is set', async (
   assert.equal(data.results, undefined);
 });
 
-test('research ideas fall back to labelled template ideas without an AI key', async () => {
+test('research ideas work without an AI key (free AI or labelled templates)', async () => {
   const user = await register('ideas@example.com');
   const { res, data } = await req('POST', '/api/research/ideas', {
     token: user.token,
     body: { topic: 'GTA 6 map' },
   });
   assert.equal(res.status, 200);
-  assert.equal(data.source, 'template');
+  assert.ok(['ai', 'template'].includes(data.source));
   assert.ok(data.ideas.length >= 3);
   assert.ok(data.ideas[0].title);
   assert.ok(data.ideas[0].hook);
@@ -245,7 +245,7 @@ test('scripts generate with a URL returns 422 when no transcript is obtainable',
   if (res.status === 422) assert.equal(data.error, 'transcript_unavailable');
 });
 
-test('thumbnail prompt works without keys; generate requires a key', async () => {
+test('thumbnail prompt works without keys; generate uses the free provider', async () => {
   const user = await register('thumb@example.com');
   const prompt = await req('POST', '/api/thumbnails/prompt', {
     token: user.token,
@@ -260,11 +260,11 @@ test('thumbnail prompt works without keys; generate requires a key', async () =>
     body: { prompt: 'a haunted forest', style: 'storytelling' },
   });
   assert.equal(gen.res.status, 200);
-  assert.equal(gen.data.setupRequired, true);
-  assert.equal(gen.data.envVar, 'IMAGE_API_KEY');
+  assert.equal(gen.data.source, 'ai');
+  assert.ok(String(gen.data.imageUrl || '').startsWith('data:image/'));
 });
 
-test('video job is needs_setup when no TTS key is set', async () => {
+test('video job queues without keys (free TTS built in)', async () => {
   const user = await register('video@example.com');
   const { res, data } = await req('POST', '/api/videos/jobs', {
     token: user.token,
@@ -277,9 +277,11 @@ test('video job is needs_setup when no TTS key is set', async () => {
     },
   });
   assert.equal(res.status, 201);
-  assert.equal(data.job.status, 'needs_setup');
-  assert.ok(data.job.missing.includes('TTS_API_KEY'));
-  assert.ok(data.job.message);
+  // The render starts in-process right after creation, so by the time the
+  // response is serialised the job may already read 'rendering'.
+  assert.ok(['queued', 'rendering'].includes(data.job.status));
+  assert.equal(data.job.missing, null);
+  assert.equal(data.job.message, null);
 
   const list = await req('GET', '/api/videos/jobs', { token: user.token });
   assert.equal(list.data.jobs.length, 1);

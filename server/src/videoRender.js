@@ -8,6 +8,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { DATA_DIR } from './store.js';
 import { fetchWithTimeout } from './validate.js';
+import { freeTtsAudio } from './providersApi.js';
 import { info, warn } from './logger.js';
 
 const execFileAsync = promisify(execFile);
@@ -21,8 +22,9 @@ export async function ffmpegAvailable() {
   }
 }
 
+// Narration always works: paid keys first, free built-in TTS otherwise.
 export function ttsConfigured() {
-  return !!(process.env.ELEVENLABS_API_KEY || process.env.OPENAI_API_KEY);
+  return true;
 }
 
 function scriptLines(script) {
@@ -57,24 +59,30 @@ async function generateNarration(text, language, voice, outPath) {
     return;
   }
   // OpenAI TTS fallback
-  const res = await fetchWithTimeout(
-    'https://api.openai.com/v1/audio/speech',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+  if (process.env.OPENAI_API_KEY) {
+    const res = await fetchWithTimeout(
+      'https://api.openai.com/v1/audio/speech',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          voice: voice || 'alloy',
+          input: text.slice(0, 4096),
+        }),
       },
-      body: JSON.stringify({
-        model: 'tts-1',
-        voice: voice || 'alloy',
-        input: text.slice(0, 4096),
-      }),
-    },
-    10_000,
-  );
-  if (!res.ok) throw new Error(`OpenAI TTS failed with status ${res.status}`);
-  fs.writeFileSync(outPath, Buffer.from(await res.arrayBuffer()));
+      10_000,
+    );
+    if (!res.ok) throw new Error(`OpenAI TTS failed with status ${res.status}`);
+    fs.writeFileSync(outPath, Buffer.from(await res.arrayBuffer()));
+    return;
+  }
+  // Free built-in narration (Google Translate TTS, no key needed).
+  const audio = await freeTtsAudio(text.slice(0, 7000), language);
+  fs.writeFileSync(outPath, audio);
 }
 
 // Escape text for ffmpeg drawtext via a text file (avoids shell quoting).
