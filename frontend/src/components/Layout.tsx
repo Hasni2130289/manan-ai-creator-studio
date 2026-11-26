@@ -55,7 +55,7 @@ export default function Layout({ onSearch }: { onSearch?: (q: string) => void })
       <div className="layout">
         <aside className={`sidebar${menuOpen ? ' open' : ''}`}>
           <Link className="brand" to="/" onClick={() => setMenuOpen(false)}>
-            <span className="brand-mark">M</span>
+            <img className="brand-logo" src="/logo.jpg" alt="Manan Automation logo" />
             <span>
               <span className="brand-name">Manan AI Creator Studio</span>
               <br />

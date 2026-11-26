@@ -25,6 +25,7 @@ export function Login() {
   return (
     <div className="auth-wrap">
       <div className="panel">
+        <img className="auth-logo" src="/logo.jpg" alt="Manan Automation logo" />
         <h1>Welcome back</h1>
         <p className="muted" style={{ lineHeight: 1.6 }}>Log in to Manan AI Creator Studio to sync your projects.</p>
         <form onSubmit={submit} style={{ marginTop: 20 }}>
@@ -68,6 +69,7 @@ export function Register() {
   return (
     <div className="auth-wrap">
       <div className="panel">
+        <img className="auth-logo" src="/logo.jpg" alt="Manan Automation logo" />
         <h1>Create your account</h1>
         <p className="muted" style={{ lineHeight: 1.6 }}>One account for all Manan AI Creator Studio tools.</p>
         <form onSubmit={submit} style={{ marginTop: 20 }}>
