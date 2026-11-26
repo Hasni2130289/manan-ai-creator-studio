@@ -290,6 +290,22 @@ test('video job queues without keys (free TTS built in)', async () => {
   assert.equal(dl.res.status, 404);
 });
 
+test('video job accepts display language label (English -> en)', async () => {
+  const user = await register('videolabel@example.com');
+  const { res, data } = await req('POST', '/api/videos/jobs', {
+    token: user.token,
+    body: {
+      title: 'Label language video',
+      script: 'Hello world. This is a test script.',
+      format: 'vertical',
+      language: 'English',
+      voice: 'alloy',
+    },
+  });
+  assert.equal(res.status, 201);
+  assert.equal(data.job.language, 'en');
+});
+
 test('admin routes reject non-admins; setup-admin 404s when no token is configured', async () => {
   const user = await register('plain@example.com');
   const users = await req('GET', '/api/admin/users', { token: user.token });

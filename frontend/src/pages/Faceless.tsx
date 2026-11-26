@@ -3,13 +3,14 @@ import { videosApi, ApiError, api } from '../lib/api';
 import type { VideoJob } from '../lib/api';
 
 const STEPS = ['Topic & script', 'Format', 'Language & voice', 'Narration', 'Visuals', 'Captions', 'Storyboard', 'Render', 'Download'];
+const LANG_LABEL: Record<string, string> = { en: 'English', ur: 'Urdu', 'roman-ur': 'Roman Urdu' };
 
 export default function Faceless() {
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState('');
   const [script, setScript] = useState('');
   const [format, setFormat] = useState<'vertical' | 'horizontal'>('vertical');
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState('en');
   const [voice, setVoice] = useState('default');
   const [narration, setNarration] = useState('');
   const [visuals, setVisuals] = useState('');
@@ -114,7 +115,7 @@ export default function Faceless() {
           <div className="row">
             <div className="field"><label htmlFor="fv-lang">Language</label>
               <select id="fv-lang" className="select" value={language} onChange={e => setLanguage(e.target.value)}>
-                <option>English</option><option>Urdu</option><option>Roman Urdu</option>
+                <option value="en">English</option><option value="ur">Urdu</option><option value="roman-ur">Roman Urdu</option>
               </select>
             </div>
             <div className="field"><label htmlFor="fv-voice">Voice</label>
@@ -174,7 +175,7 @@ export default function Faceless() {
           <h3>Step 7 · Storyboard preview</h3>
           <div className="kv"><span>Title</span><b>{title || '—'}</b></div>
           <div className="kv"><span>Format</span><b>{format === 'vertical' ? 'Vertical 9:16' : 'Horizontal 16:9'}</b></div>
-          <div className="kv"><span>Language</span><b>{language}</b></div>
+          <div className="kv"><span>Language</span><b>{LANG_LABEL[language] || language}</b></div>
           <div className="kv"><span>Voice</span><b>{voice}</b></div>
           <div className="kv"><span>Captions</span><b>{captions ? 'On' : 'Off'}</b></div>
           <div className="kv"><span>Script</span><b>{script.length.toLocaleString()} characters</b></div>

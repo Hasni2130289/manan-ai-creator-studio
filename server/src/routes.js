@@ -18,6 +18,13 @@ import { ffmpegAvailable, renderVideo, renderOutputPath } from './videoRender.js
 const PROJECT_TYPES = ['research', 'script', 'thumbnail', 'video', 'post', 'other'];
 const PLATFORMS = ['youtube', 'shorts', 'facebook', 'instagram', 'tiktok'];
 const LANGUAGES = ['en', 'ur', 'roman-ur'];
+// Accept display labels too ("English", "Urdu", "Roman Urdu") — the UI used to send labels.
+const LANGUAGE_LABELS = { english: 'en', urdu: 'ur', 'roman urdu': 'roman-ur', 'roman-urdu': 'roman-ur' };
+function normalizeLanguage(value) {
+  if (typeof value !== 'string') return value;
+  const key = value.trim().toLowerCase();
+  return LANGUAGE_LABELS[key] || value;
+}
 const TONES = ['casual', 'professional', 'funny', 'inspirational'];
 
 function setupRequired(res, provider, envVar, message) {
@@ -248,7 +255,7 @@ export function createApiRouter(store) {
     try {
       const { value: inputType, error: itErr } = reqEnum(req.body?.inputType, ['transcript', 'url'], { field: 'inputType' });
       if (itErr) return badRequest(res, itErr);
-      const { value: language, error: langErr } = reqEnum(req.body?.language, LANGUAGES, { field: 'language' });
+      const { value: language, error: langErr } = reqEnum(normalizeLanguage(req.body?.language), LANGUAGES, { field: 'language' });
       if (langErr) return badRequest(res, langErr);
       const { value: length, error: lenErr } = reqEnum(req.body?.length, ['short', 'medium', 'long'], { field: 'length' });
       if (lenErr) return badRequest(res, lenErr);
@@ -308,7 +315,7 @@ export function createApiRouter(store) {
       if (tErr) return badRequest(res, tErr);
       const { value: platforms, error: pErr } = reqStringArray(req.body?.platforms, { required: true, allowed: PLATFORMS, field: 'platforms' });
       if (pErr) return badRequest(res, pErr);
-      const { value: language, error: langErr } = reqEnum(req.body?.language, LANGUAGES, { required: false, field: 'language' });
+      const { value: language, error: langErr } = reqEnum(normalizeLanguage(req.body?.language), LANGUAGES, { required: false, field: 'language' });
       if (langErr) return badRequest(res, langErr);
       const { value: tone, error: toneErr } = reqEnum(req.body?.tone, TONES, { required: false, field: 'tone' });
       if (toneErr) return badRequest(res, toneErr);
@@ -401,7 +408,7 @@ export function createApiRouter(store) {
       if (sErr) return badRequest(res, sErr);
       const { value: format, error: fErr } = reqEnum(req.body?.format, ['vertical', 'horizontal'], { field: 'format' });
       if (fErr) return badRequest(res, fErr);
-      const { value: language, error: lErr } = reqEnum(req.body?.language, LANGUAGES, { required: false, field: 'language' });
+      const { value: language, error: lErr } = reqEnum(normalizeLanguage(req.body?.language), LANGUAGES, { required: false, field: 'language' });
       if (lErr) return badRequest(res, lErr);
       const { value: voice } = reqString(req.body?.voice, { required: false, max: 100, field: 'voice' });
 

@@ -8,7 +8,7 @@ export default function Scripts() {
   const [inputType, setInputType] = useState<'transcript' | 'url'>('url');
   const [url, setUrl] = useState('');
   const [transcript, setTranscript] = useState('');
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState('en');
   const [length, setLength] = useState('medium');
   const [result, setResult] = useState<ScriptResult | null>(null);
   const [editedScript, setEditedScript] = useState('');
@@ -103,7 +103,7 @@ export default function Scripts() {
           <div className="field">
             <label htmlFor="sc-lang">Language</label>
             <select id="sc-lang" className="select" value={language} onChange={e => setLanguage(e.target.value)}>
-              <option>English</option><option>Urdu</option><option>Roman Urdu</option>
+              <option value="en">English</option><option value="ur">Urdu</option><option value="roman-ur">Roman Urdu</option>
             </select>
           </div>
           <div className="field">

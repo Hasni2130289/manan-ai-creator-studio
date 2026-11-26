@@ -10,7 +10,7 @@ type DraftStatus = 'draft' | 'planned' | 'published';
 export default function Posts() {
   const [topic, setTopic] = useState('');
   const [platforms, setPlatforms] = useState<string[]>(['YouTube', 'TikTok']);
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState('en');
   const [tone, setTone] = useState('exciting');
   const [variations, setVariations] = useState<PostVariation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -84,7 +84,7 @@ export default function Posts() {
         <div className="row">
           <div className="field"><label htmlFor="pm-lang">Language</label>
             <select id="pm-lang" className="select" value={language} onChange={e => setLanguage(e.target.value)}>
-              <option>English</option><option>Urdu</option><option>Roman Urdu</option>
+              <option value="en">English</option><option value="ur">Urdu</option><option value="roman-ur">Roman Urdu</option>
             </select>
           </div>
           <div className="field"><label htmlFor="pm-tone">Tone</label>
