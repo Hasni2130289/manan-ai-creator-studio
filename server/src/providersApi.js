@@ -50,6 +50,20 @@ export function parseIdeasJson(text, topic) {
     .map((title) => ({ title, hook: `Why ${topic} matters — explained.` }));
 }
 
+// YouTube returns titles with HTML entities (e.g. You&#39;re). Decode the
+// common ones so results read naturally instead of showing raw entities.
+function decodeHtml(text) {
+  if (typeof text !== 'string') return text;
+  return text
+    .replace(/&#(\d+);/g, (_m, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_m, code) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
 export async function youtubeSearch(query, maxResults = 5) {
   const key = process.env.YOUTUBE_API_KEY;
   const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search');
@@ -82,8 +96,8 @@ export async function youtubeSearch(query, maxResults = 5) {
   }
   return items.map((i) => ({
     videoId: i.id.videoId,
-    title: i.snippet.title,
-    channelTitle: i.snippet.channelTitle,
+    title: decodeHtml(i.snippet.title),
+    channelTitle: decodeHtml(i.snippet.channelTitle),
     channelId: i.snippet.channelId,
     thumbnail: i.snippet.thumbnails?.medium?.url || i.snippet.thumbnails?.default?.url || '',
     views: views[i.id.videoId] ?? null,

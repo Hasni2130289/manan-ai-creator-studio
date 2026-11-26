@@ -49,7 +49,21 @@ export function requireAuth(req, res, next) {
 export function requireActiveUser(store) {
   return async (req, res, next) => {
     const user = await store.findUserById(req.user.id);
-    if (!user) return res.status(401).json({ error: 'unauthorized', message: 'User not found' });
+    if (!user) {
+      // The JSON store lives on Railway's ephemeral disk, so a redeploy can
+      // wipe user records while a valid 30-day JWT still exists. Trust the
+      // signed token payload so existing sessions keep working instead of
+      // failing every tool with "User not found".
+      warn('user record missing from store; trusting JWT payload', { userId: req.user.id });
+      req.user = {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role || 'user',
+        name: (req.user.email || '').split('@')[0] || 'User',
+        disabled: false,
+      };
+      return next();
+    }
     if (user.disabled) return res.status(403).json({ error: 'forbidden', message: 'Account is disabled' });
     req.user = user;
     return next();

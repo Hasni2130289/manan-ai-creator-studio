@@ -17,7 +17,16 @@ export async function createApp() {
   const store = await createStore();
   const app = express();
   app.set('trust proxy', 1);
-  app.use(helmet());
+  // Helmet's default CSP only allows images from this site, which breaks
+  // YouTube thumbnails (i.ytimg.com) in Viral Research results. Allow them.
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'img-src': ["'self'", 'data:', 'https://i.ytimg.com', 'https://img.youtube.com'],
+      },
+    },
+  }));
   app.use(
     cors({
       origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
