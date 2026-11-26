@@ -104,22 +104,15 @@ template / setup-required mode without it.
 The app deploys from this repo with the included `Dockerfile`
 (`railway.json` selects the Dockerfile builder).
 
-### Creating the GitHub repository (one-time)
+### Repository
 
-The repo `Hasni2130289/manan-ai-creator-studio` does not exist yet — the
-`gh` CLI on the build machine is not logged in, so the repo could not be
-created from there. Create it once, then push:
+The code lives at https://github.com/Hasni2130289/manan-ai-creator-studio
+(public, branch `main`). To push later changes from the local checkout:
 
-1. On github.com, signed in as **Hasni2130289**, create a new **public**
-   repository named `manan-ai-creator-studio` (no README, no .gitignore,
-   no licence — the code already contains them).
-2. From the local checkout, push:
-   ```bash
-   cd ~/workspace/manan-ai-creator-studio
-   git remote add origin git@github.com:Hasni2130289/manan-ai-creator-studio.git
-   GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o ProxyCommand='nc -X connect -x 198.19.0.1:3128 %h %p'" git push -u origin main
-   ```
-   (The SSH key is already added to the Hasni2130289 GitHub account.)
+```bash
+cd ~/workspace/manan-ai-creator-studio
+GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o ProxyCommand='nc -X connect -x 198.19.0.1:3128 %h %p'" git push origin main
+```
 
 ### Deploying on Railway
 
