@@ -35,7 +35,11 @@ export default function Research() {
         if (!res.results?.length) setError('No results returned for that search.');
       }
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Search failed. Please try again.');
+      if (e instanceof ApiError && e.status === 401) {
+        setError('Please log in first — search needs an account. Go to Login, sign in, then try again.');
+      } else {
+        setError(e instanceof ApiError ? e.message : 'Search failed. Please try again.');
+      }
     } finally { setLoading(false); }
   };
 
