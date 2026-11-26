@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+frontend/dist/
+*.tsbuildinfo
+
+# Local data store (JSON file store lives here when DATABASE_URL is unset)
+server/data/
+
+# Environment / secrets — never commit a real .env
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+
+# Test coverage
+coverage/

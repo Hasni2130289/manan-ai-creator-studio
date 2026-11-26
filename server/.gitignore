@@ -1,0 +1,4 @@
+# Server runtime data (JSON store + renders) — never commit.
+data/
+node_modules/
+.env
